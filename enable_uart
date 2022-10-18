@@ -1,0 +1,3 @@
+#!/bin/bash
+config-pin p9.24 uart
+config-pin p9.26 uart

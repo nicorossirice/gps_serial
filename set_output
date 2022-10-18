@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# STR=$'$PMTK314,0,1,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0*29\r\n' # Restrict output RMC, GGA, GSA
+# STR=$'$PMTK314,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*29\r\n' # Restrict output RMC
+# STR=$'$PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28\r\n' # Restrict output RMC and GGA
+STR=$'$PMTK220,1000*1F\r\n' # 1Hz
+# STR=$'$PMTK220,200*2C\r\n' # 5Hz
+echo "$STR" > /dev/ttyS1
