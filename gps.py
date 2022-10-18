@@ -6,8 +6,11 @@ from enum import Enum, auto
 from math import cos, sin, atan2, pi
 
 class NMEASentenceType(Enum):
+	"""
+	The various types of NMEA sentences.
+	"""
 	GPRMC = auto()
-	GGA = auto()
+	GPGGA = auto()
 
 
 @dataclass
@@ -29,11 +32,24 @@ class GPRMC:
 
 
 @dataclass
-class GGA:
+class GPGGA:
 	"""
-	Placeholder
+	Represents a single GPGGA sentence.
 	"""
+	time: float
+	latitude: float
+	longitude: float
+	fix_qual: int
+	number_sats: int
 	valid: bool
+	hdop: float
+	alt: float
+	alt_unit: str
+	geoid_wgs84: float
+	geoid_wgs84_unit: str
+	time_last_dgps_update: float
+	dgps_ref_id: int
+	checksum: str
 
 
 @dataclass
@@ -112,6 +128,7 @@ class GPS:
 		"""
 		Parses a NMEA sentence into a dataclass for easier manipulation. The currently supported NMEA sentences are as follows:
 			- GPRMC
+			- GPGGA
 		A NMEA dataclass is returned on success, or None on failure. 
 		"""
 		if type(nmea_sentence) is bytes:
@@ -130,8 +147,8 @@ class GPS:
 				magnetic_variation = float(comps[9])
 				magnetic_variation_dir = comps[10]
 			else:
-				latitude = None
-				longitude = None
+				latitude = float("nan")
+				longitude = float("nan")
 				magnetic_variation = float("nan")
 				magnetic_variation_dir = None
 
@@ -155,14 +172,69 @@ class GPS:
 				checksum,
 			)
 
-			return gprmc
+			return NMEA(nmea_sentence, NMEASentenceType.GPRMC, gprmc)
+		elif nmea_sentence[:6] == "$GPGGA":
+			comps = nmea_sentence[7:-3].split(",")
+			print(comps)
+
+			time_float = float(comps[0])
+			valid = comps[5] != "0"
+			fix_qual = int(comps[5])
+			number_sats = int(comps[6])
+
+			if valid:
+				latitude = float(comps[1][:2]) + float(comps[1][2:]) / 60.0
+				longitude = float(comps[3][:3]) + float(comps[3][3:]) / 60.0
+				latitude *= 1 if comps[2] == "N" else -1
+				longitude *= 1 if comps[4] == "E" else -1
+				hdop = float(comps[7])
+				alt = float(comps[8])
+				alt_unit = comps[9]
+				geoid_wgs84 = float(comps[10])
+				geoid_wgs84_unit = comps[11]
+			else:
+				latitude = float("nan")
+				longitude = float("nan")
+				hdop = float("nan")
+				alt = float("nan")
+				alt_unit = None
+				geoid_wgs84 = float("nan")
+				geoid_wgs84_unit = None
+			
+			if fix_qual == 2:
+				time_last_dgps_update = float(comps[12])
+				dgps_ref_id = int(comps[13])
+			else:
+				time_last_dgps_update = float("nan")
+				dgps_ref_id = None
+
+			checksum = nmea_sentence[-2:]
+
+			gpgga = GPGGA(
+				time_float,
+				latitude,
+				longitude,
+				fix_qual,
+				number_sats,
+				valid,
+				hdop,
+				alt,
+				alt_unit,
+				geoid_wgs84,
+				geoid_wgs84_unit,
+				time_last_dgps_update,
+				dgps_ref_id,
+				checksum,
+			)
+
+			return NMEA(nmea_sentence, NMEASentenceType.GPGGA, gpgga)
 
 		return None
 
 
 if __name__ == "__main__":
 	gps = GPS("/dev/ttyS1")
-	gps.gps_setup(enable_gga=False, rate_5Hz=False)
+	gps.gps_setup(enable_gga=True, rate_5Hz=False)
 	# print(gps.checksum("PMTK220,1000"))
 	# print(str(gps.readline().decode()))
 	# print(gps.checksum("PMTK314,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0"))
@@ -176,7 +248,7 @@ if __name__ == "__main__":
 		nmea = gps.readline()
 		# print(time.time() - start)
 		print(nmea)
-		# print(gps.parse_nmea_sentence(nmea))
+		print(gps.parse_nmea_sentence(nmea))
 		print("----")
 		# start = time.time()
 
