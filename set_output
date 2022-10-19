@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Allows for manual control of the GPS module. Note that the pins must be set to UART, and that the styling with $ and '' should be followed to leave the \r\n characters intact.
+
 # STR=$'$PMTK314,0,1,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0*29\r\n' # Restrict output RMC, GGA, GSA
 # STR=$'$PMTK314,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*29\r\n' # Restrict output RMC
 # STR=$'$PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28\r\n' # Restrict output RMC and GGA

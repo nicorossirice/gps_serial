@@ -1,3 +1,6 @@
 #!/bin/bash
+
+# Enables UART 1 on pins 9.24 and 9.26
+
 config-pin p9.24 uart
 config-pin p9.26 uart
