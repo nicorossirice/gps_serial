@@ -116,12 +116,13 @@ class GPS:
 		"""
 		Gets the bearing in degrees between two lat-long points. This is the straight line direction from the cur position to the target position, relative to a line directly towards the north pole.
 		"""
-		x = cos(target_lat * pi / 180) * sin((target_long - cur_long) * pi / 180)
-		print(x)
-		y = cos(cur_lat * pi / 180) * sin(target_lat * pi / 180) - sin(cur_lat * pi / 180) * cos(target_lat * pi / 180) * cos((target_long - cur_long) * pi / 180)
-		print(f"{cos(cur_lat * pi / 180)} * {sin(target_lat * pi / 180)} - {sin(cur_lat * pi / 180)} * {cos(target_lat * pi / 180)} * {cos((target_long - cur_long) * pi / 180)}")
-		print(y)
-		return atan2(x, y)
+		y = cos(target_lat * pi / 180) * sin((target_long - cur_long) * pi / 180)
+		# print(y)
+		x = cos(cur_lat * pi / 180) * sin(target_lat * pi / 180) - sin(cur_lat * pi / 180) * cos(target_lat * pi / 180) * cos((target_long - cur_long) * pi / 180)
+
+		# print(f"{cos(cur_lat * pi / 180)} * {sin(target_lat * pi / 180)} - {sin(cur_lat * pi / 180)} * {cos(target_lat * pi / 180)} * {cos((target_long - cur_long) * pi / 180)}")
+		# print(x)
+		return atan2(y, x) * 180 / pi
 
 
 	def parse_nmea_sentence(self, nmea_sentence: "str | bytes") -> NMEA:
@@ -144,11 +145,15 @@ class GPS:
 				longitude = float(comps[4][:3]) + float(comps[4][3:]) / 60.0
 				latitude *= 1 if comps[3] == "N" else -1
 				longitude *= 1 if comps[5] == "E" else -1
-				magnetic_variation = float(comps[9])
-				magnetic_variation_dir = comps[10]
 			else:
 				latitude = float("nan")
 				longitude = float("nan")
+				
+
+			if comps[9] != "":
+				magnetic_variation = float(comps[9])
+				magnetic_variation_dir = comps[10]
+			else:
 				magnetic_variation = float("nan")
 				magnetic_variation_dir = None
 
@@ -234,7 +239,9 @@ class GPS:
 
 if __name__ == "__main__":
 	gps = GPS("/dev/ttyS1")
-	gps.gps_setup(enable_gga=True, rate_5Hz=False)
+	gps.gps_setup(enable_gga=False, rate_5Hz=False)
+	print(gps.parse_nmea_sentence("$GPRMC,194509.000,A,4042.6142,N,07400.4168,W,2.03,221.11,160412,,,A*77"))
+	print(gps.get_bearing(40.71023666666667, -74.00694666666666, 40.71499092714065, -74.05111649966017))
 	# print(gps.checksum("PMTK220,1000"))
 	# print(str(gps.readline().decode()))
 	# print(gps.checksum("PMTK314,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0"))
@@ -244,13 +251,13 @@ if __name__ == "__main__":
 
 	# import time
 	# start = time.time()
-	while True:
-		nmea = gps.readline()
-		# print(time.time() - start)
-		print(nmea)
-		print(gps.parse_nmea_sentence(nmea))
-		print("----")
-		# start = time.time()
+	# while True:
+	# 	nmea = gps.readline()
+	# 	# print(time.time() - start)
+	# 	print(nmea)
+	# 	print(gps.parse_nmea_sentence(nmea))
+	# 	print("----")
+	# 	# start = time.time()
 
 	# for _ in range(100):
 	# 	print(gps.readline())
